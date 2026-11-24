@@ -61,7 +61,7 @@ export class TournamentEngine {
       previewDuration: 15,
       regionMode: 'midpoint',
       lufsMatch: true,
-      pureBlind: false,
+      pureBlind: true,
     };
   }
 
@@ -71,7 +71,6 @@ export class TournamentEngine {
     previewDuration = 15,
     regionMode = 'midpoint',
     lufsMatch = true,
-    pureBlind = false,
   } = {}) {
     if (!Array.isArray(selectedTracks) || selectedTracks.length < 2) {
       throw new Error('At least 2 tracks are required to start a shootout.');
@@ -84,7 +83,7 @@ export class TournamentEngine {
     this.mode = mode;
     this.tracks = [...selectedTracks];
     this.tracksById = new Map(this.tracks.map((t) => [t.id, t]));
-    this.settings = { previewDuration, regionMode, lufsMatch, pureBlind };
+    this.settings = { previewDuration, regionMode, lufsMatch, pureBlind: true };
 
     for (const t of this.tracks) {
       this.notesByTrackId.set(t.id, { tags: [], text: '' });

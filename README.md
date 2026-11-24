@@ -13,7 +13,7 @@ Drop a batch of master renders (or a whole folder) into your browser and judge t
 ### Core Capabilities
 
 - **100% Client-Side & Private:** Audio is decoded and compared locally via the Web Audio API. Nothing leaves your machine.
-- **Built-In Zero-Bloat Demo Shootout:** Try the full console in one click with 4 live-synthesized mastering variations (*Balanced*, *Warm Analog*, *Bright Air*, *Loud Squashed*) generated client-side via `OfflineAudioContext` — no bulky WAVs in the repository.
+- **Always-On Pure Blind Mode:** Filenames, formats, sample rates, file sizes, and upload order are sealed and randomized immediately on drop — nothing is revealed until the final Verdict.
 - **ITU-R BS.1770 K-Weighted LUFS Loudness Matching:** Levels contenders by attenuating the louder track (preventing digital clipping) without leaking *which* option was trimmed during the blind shootout. Exact LUFS, sample peak (dBFS), and crest/dynamic range numbers are revealed only at the end.
 - **Selectable Loop Region & Waveform Scrubber:** Compare the exact midpoint ($T/2$), auto-detect the **Loudest Chorus**, jump to Intro/Outro, or drag the loop window anywhere on the track waveform (10s / 15s / 20s / 30s), plus optional ±50 ms micro-alignment trim for WAV vs MP3/AAC encoder padding.
 - **Three Blind Formats + Undo:**
@@ -23,7 +23,7 @@ Drop a batch of master renders (or a whole folder) into your browser and judge t
 - **Mastering Monitor Matrix & Real Stereo Metering:**
   - Instant clickless `STEREO` / `MONO (M)` / `SIDE (S)` auditioning.
   - True dual-channel Left/Right peak + RMS VU meters (`ChannelSplitterNode`) with clip indicator and 48-band monochrome FFT spectrum.
-- **Pure Blind Mode & Blind Notes:** Optionally mask filenames immediately on upload, tag/write notes for Option I & Option II mid-round without knowing which file is which, and export a **Markdown** or **JSON** shootout report.
+- **Blind Notes & Report Export:** Tag/write notes for Option I & Option II mid-round without knowing which file is which, and export a **Markdown** or **JSON** shootout report upon reveal.
 - **Smart Master Filtering & Recursive Folder Drop:** Filters for `MASTER` / `MASTERED` while excluding `UNMASTERED`, supports live re-filtering, recursive drag-and-drop folders, and optional local CLI `ffmpeg` companion mode.
 
 ---

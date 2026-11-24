@@ -105,17 +105,9 @@
             </p>
             <p class="hero-sub">
               Drop a batch of renders for sample-locked A/B switching, ITU-R BS.1770 LUFS loudness matching,
-              Stereo/Mono/Side checks, and unbiased blind verdicts. Audio stays 100% inside your browser.
+              Stereo/Mono/Side checks, and unbiased verdicts. Filenames, formats, and loudness metrics stay
+              strictly sealed until a winner is crowned — 100% inside your browser.
             </p>
-            <div class="hero-quick-actions">
-              <button type="button" id="btn-try-demo" class="sg-btn sg-btn-ink">
-                Try Demo Shootout
-                <span aria-hidden="true">↗</span>
-              </button>
-              <span class="micro hero-demo-hint">
-                4 synthesized mastering chains · zero upload needed
-              </span>
-            </div>
           </div>
         </div>
 
@@ -185,13 +177,9 @@
               </span>
             </label>
 
-            <label class="sg-toggle" for="toggle-pure-blind">
-              <input type="checkbox" id="toggle-pure-blind" class="sr-only" />
-              <span class="sg-toggle-track" aria-hidden="true"></span>
-              <span class="sg-toggle-text">
-                Pure Blind Mode (mask filenames immediately)
-              </span>
-            </label>
+            <span class="micro pure-blind-tag">
+              ✳ PURE BLIND MODE ALWAYS ON — IDENTITIES SEALED UNTIL VERDICT
+            </span>
           </div>
 
           <!-- Decode Progress Bar -->
@@ -228,13 +216,6 @@
               </p>
             </div>
             <div class="section-bar-actions">
-              <input
-                type="search"
-                id="track-search-input"
-                class="sg-input sg-input-sm"
-                placeholder="Filter filenames..."
-                aria-label="Filter loaded tracks by filename"
-              />
               <button type="button" id="btn-add-more-files" class="sg-btn sg-btn-outline sg-btn-sm">
                 + Add Files
               </button>
@@ -247,15 +228,13 @@
             </div>
           </div>
 
-          <!-- Track Table -->
+          <!-- Track Table (Strictly Blinded) -->
           <div class="sg-card table-card">
             <div class="track-table-head micro" aria-hidden="true">
               <div class="col-check"></div>
-              <div class="col-name">Track</div>
-              <div class="col-fmt">Format</div>
-              <div class="col-dur">Length</div>
+              <div class="col-name">Contender</div>
+              <div class="col-fmt">Identity</div>
               <div class="col-mid">Loop Window</div>
-              <div class="col-size">Size</div>
               <div class="col-action">Audition</div>
             </div>
             <div id="track-list-body" class="track-table-body" role="list"></div>

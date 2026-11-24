@@ -5,6 +5,7 @@
 
 import {
   evaluateAudioFile,
+  fisherYatesShuffle,
   formatTime,
   formatTimeRange,
   analyzeAudioBuffer,
@@ -19,7 +20,6 @@ import {
   generateJsonReport,
 } from './tournament.js';
 import { AudioEngine, decodeAudioDataSafe } from './audio-engine.js';
-import { generateDemoMasterFiles } from './demo-synth.js';
 
 const audio = new AudioEngine();
 const tournament = new TournamentEngine();
@@ -27,15 +27,13 @@ const tournament = new TournamentEngine();
 const App = {
   state: {
     allFileEntries: [], // [{ key, file, source: 'browser'|'local', localMeta?, track? }]
-    tracks: [], // Currently active filtered & decoded tracks
+    tracks: [], // Currently active filtered & decoded tracks (shuffled for strict pure blind mode)
     selectedTrackIds: new Set(),
-    searchQuery: '',
     previewDuration: 15,
     regionMode: 'midpoint', // 'midpoint' | 'loudest' | 'intro' | 'outro' | 'custom'
     customStartRatio: 0.5, // Normalized start position [0..1] for custom region
     formatMode: 'koth', // 'koth' | 'round-robin' | 'abx'
     abxTrials: 8,
-    pureBlind: false,
     activePanel: 'scan',
     lastSummary: null,
     activeWinnerBlobUrl: null,
@@ -82,7 +80,6 @@ const App = {
       btnLocalRescan: id('btn-local-rescan'),
 
       // Upload & Setup
-      btnTryDemo: id('btn-try-demo'),
       uploadDropzone: id('upload-dropzone'),
       dropzoneClickTarget: id('dropzone-click-target'),
       fileUploadInput: id('file-upload-input'),
@@ -90,7 +87,6 @@ const App = {
       btnSelectFiles: id('btn-select-files'),
       btnSelectFolder: id('btn-select-folder'),
       toggleMasterFilter: id('toggle-master-filter'),
-      togglePureBlind: id('toggle-pure-blind'),
       decodeProgressContainer: id('decode-progress-container'),
       decodeProgressText: id('decode-progress-text'),
       decodeProgressPct: id('decode-progress-pct'),
@@ -104,7 +100,6 @@ const App = {
       scanResults: id('scan-results-container'),
       resultsCountText: id('results-count-text'),
       resultsSubText: id('results-sub-text'),
-      trackSearchInput: id('track-search-input'),
       btnAddMoreFiles: id('btn-add-more-files'),
       btnToggleAll: id('btn-toggle-all'),
       btnClearFiles: id('btn-clear-files'),
@@ -269,9 +264,6 @@ const App = {
     this.els.brandHomeLink.addEventListener('click', handleReturnToScan);
     this.els.btnHeaderNew.addEventListener('click', handleReturnToScan);
 
-    // Demo Shootout
-    this.els.btnTryDemo.addEventListener('click', () => this.loadDemoShootout());
-
     // Local Server Actions
     this.els.btnLocalBrowse.addEventListener('click', () => this.browseLocalFolder());
     this.els.btnLocalRescan.addEventListener('click', () => {
@@ -345,19 +337,9 @@ const App = {
       this.els.decodeErrorsBanner.classList.add('hidden');
     });
 
-    // Live filter toggles & search
+    // Live master filter toggle
     this.els.toggleMasterFilter.addEventListener('change', () => {
       this.reapplyFiltersAndSync();
-    });
-
-    this.els.togglePureBlind.addEventListener('change', (e) => {
-      this.state.pureBlind = e.target.checked;
-      this.renderTrackList();
-    });
-
-    this.els.trackSearchInput.addEventListener('input', (e) => {
-      this.state.searchQuery = e.target.value;
-      this.renderTrackList();
     });
 
     this.els.btnToggleAll.addEventListener('click', () => this.toggleAllVisibleTracks());
@@ -741,7 +723,7 @@ const App = {
     for (let i = 0; i < serverTracks.length; i++) {
       const st = serverTracks[i];
       const pct = Math.round(((i + 1) / serverTracks.length) * 100);
-      this.showProgress(pct, `Decoding local track: ${st.filename} (${i + 1}/${serverTracks.length})`);
+      this.showProgress(pct, `Decoding local track ${i + 1} of ${serverTracks.length}...`);
 
       try {
         const useTranscode = this.state.localServer.hasFfmpeg && ['.aif', '.aiff', '.caf', '.wma'].includes(st.extension);
@@ -753,7 +735,7 @@ const App = {
         const track = await this.decodeAndAnalyzeFile(ctx, file, st);
         loaded.push(track);
       } catch (err) {
-        errors.push(`${st.filename}: ${err.message || 'decode failed'}`);
+        errors.push(`1 local file failed to decode (${err.message || 'unsupported format'}).`);
       }
     }
 
@@ -761,40 +743,16 @@ const App = {
     if (errors.length) this.showDecodeErrors(errors);
 
     if (loaded.length > 0) {
-      this.state.allFileEntries = loaded.map((t) => ({
+      const shuffled = fisherYatesShuffle(loaded);
+      this.state.allFileEntries = shuffled.map((t) => ({
         key: t.localId || t.id,
         file: t.file,
         track: t,
       }));
-      this.state.tracks = loaded;
-      this.state.selectedTrackIds = new Set(loaded.map((t) => t.id));
+      this.state.tracks = shuffled;
+      this.state.selectedTrackIds = new Set(shuffled.map((t) => t.id));
       this.renderTrackList();
-      this.showToast(`Loaded ${loaded.length} local master track${loaded.length > 1 ? 's' : ''}.`);
-    }
-  },
-
-  /* ========================================================================
-     Demo Shootout Loader (Zero-Bloat Client-Side Synth)
-     ======================================================================== */
-
-  async loadDemoShootout() {
-    audio.ensureContext();
-    this.els.btnTryDemo.disabled = true;
-    this.showProgress(5, 'Preparing synthetic studio masters...');
-
-    try {
-      const demoFiles = await generateDemoMasterFiles((pct, msg) => {
-        this.showProgress(pct, msg);
-      });
-      await this.ingestFiles(demoFiles, { append: false, bypassMasterToast: true });
-      this.showToast('Demo loaded — 4 distinct mastering chains ready!');
-      this.els.scanResults.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    } catch (err) {
-      console.error(err);
-      this.showToast('Could not synthesize demo shootout in this browser.', true);
-    } finally {
-      this.hideProgress();
-      this.els.btnTryDemo.disabled = false;
+      this.showToast(`Loaded ${shuffled.length} blinded contender${shuffled.length > 1 ? 's' : ''}.`);
     }
   },
 
@@ -802,7 +760,7 @@ const App = {
      Client-Side File Ingestion, Live Filtering & Memory-Efficient Slicing
      ======================================================================== */
 
-  async ingestFiles(files, { append = false, bypassMasterToast = false } = {}) {
+  async ingestFiles(files, { append = false } = {}) {
     if (!append) {
       this.state.allFileEntries = [];
       this.state.tracks = [];
@@ -818,10 +776,10 @@ const App = {
       }
     }
 
-    await this.reapplyFiltersAndSync({ bypassMasterToast });
+    await this.reapplyFiltersAndSync();
   },
 
-  async reapplyFiltersAndSync({ bypassMasterToast = false } = {}) {
+  async reapplyFiltersAndSync() {
     const filterOnlyMasters = this.els.toggleMasterFilter.checked;
     const ctx = audio.ensureContext();
 
@@ -844,7 +802,7 @@ const App = {
       this.state.tracks = [];
       this.state.selectedTrackIds.clear();
       this.renderTrackList(excludedUnmastered);
-      if (this.state.allFileEntries.length > 0 && !bypassMasterToast) {
+      if (this.state.allFileEntries.length > 0) {
         if (excludedUnmastered > 0) {
           this.showToast(
             `Excluded ${excludedUnmastered} UNMASTERED file(s). Toggle filter off to compare all audio.`,
@@ -866,22 +824,22 @@ const App = {
     const decodeErrors = [];
 
     if (toDecode.length > 0) {
-      this.showProgress(0, `Decoding ${toDecode.length} track(s)...`);
+      this.showProgress(0, `Decoding ${toDecode.length} blinded track(s)...`);
       for (let i = 0; i < toDecode.length; i++) {
         const entry = toDecode[i];
         const pct = Math.round(((i + 1) / toDecode.length) * 100);
-        this.showProgress(pct, `Analyzing ${entry.file.name} (${i + 1} of ${toDecode.length})...`);
+        this.showProgress(pct, `Analyzing blinded track ${i + 1} of ${toDecode.length}...`);
         try {
           entry.track = await this.decodeAndAnalyzeFile(ctx, entry.file);
         } catch (err) {
-          console.error(`Failed to decode ${entry.file.name}:`, err);
+          console.error('Failed to decode audio file:', err);
           const lower = entry.file.name.toLowerCase();
           if (lower.endsWith('.aif') || lower.endsWith('.aiff')) {
             decodeErrors.push(
-              `${entry.file.name} — Browser lacks native AIFF decoder. Convert to WAV/FLAC or run local "python3 master_ab.py" (ffmpeg).`
+              `Unsupported AIFF file — browser lacks a native AIFF decoder. Convert to WAV/FLAC or run local "python3 master_ab.py" (ffmpeg).`
             );
           } else {
-            decodeErrors.push(`${entry.file.name} — Could not decode audio (${err?.message || 'unsupported codec'}).`);
+            decodeErrors.push(`1 audio file could not be decoded (${err?.message || 'unsupported codec'}).`);
           }
         }
       }
@@ -898,17 +856,18 @@ const App = {
     const prevSelected = new Set(this.state.selectedTrackIds);
     const isFreshLoad = this.state.tracks.length === 0;
 
-    this.state.tracks = validTracks;
+    // Shuffle contender display order so upload / alphabetical ordering cannot hint track identity
+    this.state.tracks = isFreshLoad ? fisherYatesShuffle(validTracks) : validTracks;
     this.state.selectedTrackIds = new Set();
-    for (const t of validTracks) {
+    for (const t of this.state.tracks) {
       if (isFreshLoad || prevSelected.has(t.id) || toDecode.some((e) => e.track?.id === t.id)) {
         this.state.selectedTrackIds.add(t.id);
       }
     }
 
     this.renderTrackList(excludedUnmastered);
-    if (!bypassMasterToast && toDecode.length > 0 && validTracks.length > 0) {
-      this.showToast(`Ready: ${validTracks.length} track${validTracks.length > 1 ? 's' : ''} analyzed.`);
+    if (toDecode.length > 0 && validTracks.length > 0) {
+      this.showToast(`Sealed & ready: ${validTracks.length} blinded contender${validTracks.length > 1 ? 's' : ''}.`);
     }
   },
 
@@ -997,7 +956,7 @@ const App = {
     for (let i = 0; i < this.state.tracks.length; i++) {
       const track = this.state.tracks[i];
       const pct = Math.round(((i + 1) / this.state.tracks.length) * 100);
-      this.showProgress(pct, `Slicing ${this.state.pureBlind ? `Track #${i + 1}` : track.filename}...`);
+      this.showProgress(pct, `Updating loop window (${i + 1} of ${this.state.tracks.length})...`);
 
       try {
         const arrayBuf = await track.file.arrayBuffer();
@@ -1050,13 +1009,8 @@ const App = {
       return;
     }
 
-    const q = this.state.searchQuery.trim().toLowerCase();
-    const visibleTracks = q
-      ? allTracks.filter((t) => t.filename.toLowerCase().includes(q))
-      : allTracks;
-
-    this.els.resultsCountText.textContent = `${allTracks.length} Track${allTracks.length === 1 ? '' : 's'} Ready`;
-    let sub = `${this.state.selectedTrackIds.size} selected for shootout.`;
+    this.els.resultsCountText.textContent = `${allTracks.length} Blinded Contender${allTracks.length === 1 ? '' : 's'} Ready`;
+    let sub = `${this.state.selectedTrackIds.size} selected — filenames, formats, and sizes stay sealed until Verdict.`;
     if (excludedUnmastered > 0) {
       sub += ` (${excludedUnmastered} UNMASTERED file${excludedUnmastered > 1 ? 's' : ''} excluded.)`;
     }
@@ -1065,14 +1019,12 @@ const App = {
     const body = this.els.trackListBody;
     body.innerHTML = '';
 
-    visibleTracks.forEach((track, idx) => {
+    allTracks.forEach((track, idx) => {
       const row = document.createElement('div');
       row.className = 'track-row';
       row.setAttribute('role', 'listitem');
 
-      const displayName = this.state.pureBlind ? `Blinded Track #${idx + 1}` : track.filename;
-      const displayFmt = this.state.pureBlind ? 'HIDDEN' : track.formatDesc;
-      const displaySize = this.state.pureBlind ? '—' : `${track.sizeMb} MB`;
+      const displayName = `Contender ${String(idx + 1).padStart(2, '0')}`;
 
       // Checkbox column
       const colCheck = document.createElement('div');
@@ -1089,34 +1041,23 @@ const App = {
       });
       colCheck.appendChild(chk);
 
-      // Name column (strictly textContent — XSS safe)
+      // Name column (strictly blinded until Verdict)
       const colName = document.createElement('div');
       colName.className = 'col-name track-name-cell text-truncate';
-      colName.title = displayName;
       colName.textContent = displayName;
 
-      // Format column
+      // Identity seal column
       const colFmt = document.createElement('div');
       colFmt.className = 'col-fmt';
       const badge = document.createElement('span');
       badge.className = 'track-badge';
-      badge.textContent = displayFmt;
+      badge.textContent = 'IDENTITY SEALED';
       colFmt.appendChild(badge);
 
-      // Duration column
-      const colDur = document.createElement('div');
-      colDur.className = 'col-dur mono-cell';
-      colDur.textContent = formatTime(track.duration);
-
-      // Loop window column (properly handles minute rollover!)
+      // Loop window column
       const colMid = document.createElement('div');
       colMid.className = 'col-mid mono-cell';
       colMid.textContent = formatTimeRange(track.clipStart, track.clipDuration);
-
-      // Size column
-      const colSize = document.createElement('div');
-      colSize.className = 'col-size mono-cell';
-      colSize.textContent = displaySize;
 
       // Action column (Preview + Remove)
       const colAction = document.createElement('div');
@@ -1131,7 +1072,7 @@ const App = {
       const btnRem = document.createElement('button');
       btnRem.type = 'button';
       btnRem.className = 'btn-remove-track';
-      btnRem.title = 'Remove track';
+      btnRem.title = `Remove ${displayName}`;
       btnRem.setAttribute('aria-label', `Remove ${displayName}`);
       btnRem.textContent = '×';
       btnRem.addEventListener('click', () => this.removeTrack(track.id));
@@ -1139,11 +1080,11 @@ const App = {
       colAction.appendChild(btnPrev);
       colAction.appendChild(btnRem);
 
-      row.append(colCheck, colName, colFmt, colDur, colMid, colSize, colAction);
+      row.append(colCheck, colName, colFmt, colMid, colAction);
       body.appendChild(row);
     });
 
-    const allChecked = visibleTracks.length > 0 && visibleTracks.every((t) => this.state.selectedTrackIds.has(t.id));
+    const allChecked = allTracks.length > 0 && allTracks.every((t) => this.state.selectedTrackIds.has(t.id));
     this.els.btnToggleAll.textContent = allChecked ? 'Deselect All' : 'Select All';
 
     this.updateStartButtonState();
@@ -1159,12 +1100,8 @@ const App = {
   },
 
   toggleAllVisibleTracks() {
-    const q = this.state.searchQuery.trim().toLowerCase();
-    const visible = q
-      ? this.state.tracks.filter((t) => t.filename.toLowerCase().includes(q))
-      : this.state.tracks;
-    const allChecked = visible.every((t) => this.state.selectedTrackIds.has(t.id));
-    for (const t of visible) {
+    const allChecked = this.state.tracks.every((t) => this.state.selectedTrackIds.has(t.id));
+    for (const t of this.state.tracks) {
       if (allChecked) this.state.selectedTrackIds.delete(t.id);
       else this.state.selectedTrackIds.add(t.id);
     }
@@ -1176,8 +1113,6 @@ const App = {
     this.state.allFileEntries = [];
     this.state.tracks = [];
     this.state.selectedTrackIds.clear();
-    this.state.searchQuery = '';
-    this.els.trackSearchInput.value = '';
     this.els.decodeErrorsBanner.classList.add('hidden');
     this.renderTrackList();
   },
@@ -1259,7 +1194,6 @@ const App = {
         previewDuration: this.state.previewDuration,
         regionMode: this.state.regionMode,
         lufsMatch: this.els.toggleLufsMatch.checked,
-        pureBlind: this.state.pureBlind,
       });
     } catch (err) {
       this.showToast(err.message, true);
