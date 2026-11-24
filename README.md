@@ -1,106 +1,85 @@
-# 🎛️ Master Clash — Blind Mastering Shootout & A/B Tournament
+# Master Clash — Saint Gordon Collective
 
-> **100% In-Browser & GitHub Pages Ready**: A sleek, client-side audio mastering A/B comparison console. Upload any batch of audio files to run an unbiased, blind king-of-the-hill tournament. Compare 15-second middle segments with seamless zero-latency A/B switching.
+> **Blind Mastering Shootout & A/B Console** — 100% client-side in your browser, built in the editorial monochrome studio style of [Saint Gordon Collective](https://saintgordon.vercel.app).
 
----
-
-## 🌐 Deploy to GitHub Pages in 60 Seconds
-
-Because **Master Clash** runs 100% in client-side Web Audio API (no server or backend needed), you can host it for free on GitHub Pages so anyone in the world can run blind master shootouts directly in their browser!
-
-### Step 1: Create a GitHub Repository
-1. Go to [github.com/new](https://github.com/new).
-2. Name your repository (e.g. `master-clash` or `master-tournament`).
-3. Leave it Public and click **Create repository**.
-
-### Step 2: Push this Project
-Run these commands in your terminal:
-```bash
-cd /Users/bryngordon/.gemini/antigravity/scratch/master-tournament
-
-# Add your GitHub repository remote
-git remote add origin https://github.com/<YOUR-USERNAME>/<YOUR-REPO>.git
-git branch -M main
-git add .
-git commit -m "Initial commit: Master Clash GitHub Pages Shootout"
-git push -u origin main
-```
-
-### Step 3: Enable GitHub Pages
-1. In your GitHub repo, go to **Settings** → **Pages** (in the left sidebar).
-2. Under **Build and deployment** → **Source**, select **Deploy from a branch**.
-3. Under **Branch**, select **`main`** and folder **`/ (root)`**, then click **Save**.
-4. In about 30 seconds, GitHub Pages will give you your live URL:
-   `https://<YOUR-USERNAME>.github.io/<YOUR-REPO>/`
-
-Share this link with your friends, clients, or bandmates!
+**Live App:** [https://firewallaby.github.io/master-clash/](https://firewallaby.github.io/master-clash/)
 
 ---
 
-## 🎧 Features
+## What It Does
 
-### 🔒 100% Private & In-Browser
-- Audio files are decoded directly in the browser's memory using the **Web Audio API**.
-- **Zero server uploads**: Audio never leaves the user's machine. Zero bandwidth costs, complete privacy, infinite scale.
+Drop a batch of master renders (or a whole folder) into your browser and judge them strictly by ear — with zero server uploads, true ITU-R BS.1770 K-weighted LUFS loudness matching, zero-latency clickless A/B switching, Stereo/Mono/Side monitoring, and full blind reveal reports.
 
-### 📁 Drag & Drop Batch Upload & Automatic Filtering
-- **Drag & drop** any number of audio files (`.wav`, `.aif`, `.aiff`, `.flac`, `.mp3`, `.m4a`, `.aac`, `.ogg`) or an entire folder.
-- **Smart Master Detection**: Automatically selects files containing **`MASTER`** or **`MASTERED`** while **strictly excluding anything containing `UNMASTERED`**.
-- Filter toggle lets you compare unmastered mixes or stems if desired.
+### Core Capabilities
 
-### 🙈 Strictly Blind Arena: "Option 1" vs "Option 2"
-- **Zero Giveaways**: All file names, formats (e.g. WAV 24-bit 96k vs MP3), sample rates, bit depths, and sizes are completely hidden.
-- Contenders are strictly masked as **Option 1** and **Option 2**.
-- Contender positions are randomized (50/50) each round so the incumbent King isn't always Option 1.
-
-### ⏱️ Sample-Accurate 15-Second Midpoint Shootout
-- Automatically calculates the center of the track ($T / 2$) and loops the middle 15 seconds.
-- Toggle between 10s, 15s (default), 20s, or 30s preview loops.
-- **Instant 0-Latency A/B Switching**: Fades between Option 1 and Option 2 with a 5ms micro-crossfade at the **identical playback millisecond**, making EQ, transient, and compression differences immediately obvious without skipping a beat.
-
-### ⚖️ Auto-RMS Loudness Matching
-- A louder master often tricks the human ear into hearing "better" clarity.
-- Built-in real-time RMS normalization levels the playing field so you judge tone and dynamics, not volume.
-
-### 📊 Real-Time Visualizer & Transport
-- 48-band FFT audio spectrum visualizer.
-- Stereo Left/Right peak VU meters.
-- Interactive loop timeline scrubber with live playhead.
-- Auto A/B mode (flips between Option 1 and Option 2 every 15s).
-
-### 👑 Crowning & Grand Reveal
-- Confetti explosion upon picking the final winner!
-- Pulls back the curtain: reveals the champion filename, format specs, duration, and file size.
-- Interactive full-song audio player to listen to the winning master in its entirety.
-- One-click **"Download Winning Master"** and **"Copy File Name"**.
-- Full round-by-round elimination ladder history.
+- **100% Client-Side & Private:** Audio is decoded and compared locally via the Web Audio API. Nothing leaves your machine.
+- **Built-In Zero-Bloat Demo Shootout:** Try the full console in one click with 4 live-synthesized mastering variations (*Balanced*, *Warm Analog*, *Bright Air*, *Loud Squashed*) generated client-side via `OfflineAudioContext` — no bulky WAVs in the repository.
+- **ITU-R BS.1770 K-Weighted LUFS Loudness Matching:** Levels contenders by attenuating the louder track (preventing digital clipping) without leaking *which* option was trimmed during the blind shootout. Exact LUFS, sample peak (dBFS), and crest/dynamic range numbers are revealed only at the end.
+- **Selectable Loop Region & Waveform Scrubber:** Compare the exact midpoint ($T/2$), auto-detect the **Loudest Chorus**, jump to Intro/Outro, or drag the loop window anywhere on the track waveform (10s / 15s / 20s / 30s), plus optional ±50 ms micro-alignment trim for WAV vs MP3/AAC encoder padding.
+- **Three Blind Formats + Undo:**
+  - **King of the Hill:** Fast elimination ladder with Undo (`Z`) so a stray keypress never kills a master.
+  - **Round-Robin (Ranked + Consistency Check):** Full 1st–Nth rankings with W–L record, Elo rating, and a hidden verification rematch to measure your **Ear Consistency Score**.
+  - **ABX Statistical Test:** Classic A / B / X trials (6, 8, 10, or 12 rounds) with exact one-tailed binomial $p$-value calculation.
+- **Mastering Monitor Matrix & Real Stereo Metering:**
+  - Instant clickless `STEREO` / `MONO (M)` / `SIDE (S)` auditioning.
+  - True dual-channel Left/Right peak + RMS VU meters (`ChannelSplitterNode`) with clip indicator and 48-band monochrome FFT spectrum.
+- **Pure Blind Mode & Blind Notes:** Optionally mask filenames immediately on upload, tag/write notes for Option I & Option II mid-round without knowing which file is which, and export a **Markdown** or **JSON** shootout report.
+- **Smart Master Filtering & Recursive Folder Drop:** Filters for `MASTER` / `MASTERED` while excluding `UNMASTERED`, supports live re-filtering, recursive drag-and-drop folders, and optional local CLI `ffmpeg` companion mode.
 
 ---
 
-## ⌨️ Studio Keyboard Shortcuts
+## Keyboard Shortcuts
 
 | Key | Action |
 |---|---|
-| <kbd>Space</kbd> | Play / Pause 15-second loop |
-| <kbd>1</kbd> | Instant switch to **Option 1** (starts playback if paused) |
-| <kbd>2</kbd> | Instant switch to **Option 2** (starts playback if paused) |
-| <kbd>←</kbd> or <kbd>Shift+1</kbd> | Pick **Option 1** as Winner & Advance |
-| <kbd>→</kbd> or <kbd>Shift+2</kbd> | Pick **Option 2** as Winner & Advance |
-| <kbd>R</kbd> | Restart loop from 00:00.0 |
+| `Space` | Play / Pause synchronized loop |
+| `1` | Instant switch to **Option I** (or **A** in ABX) |
+| `2` | Instant switch to **Option II** (or **B** in ABX) |
+| `3` | Instant switch to **Option X** (ABX mode) |
+| `←` or `Shift + 1` | Pick **Option I** / **X is A** |
+| `→` or `Shift + 2` | Pick **Option II** / **X is B** |
+| `Z` | Undo last vote |
+| `M` | Toggle **Mono Sum** monitor |
+| `S` | Toggle **Side (L − R)** monitor |
+| `L` | Toggle **LUFS Loudness Match** |
+| `R` | Restart loop from `00:00.0` |
 
 ---
 
-## 💻 Local Command Line Use
+## Local CLI & Companion Server (Optional)
 
-You can also run it locally via terminal:
+Need `ffmpeg`-backed transcoding (for AIFF/CAF/32-bit float WAVs on browsers without native decoders) or instant folder pre-loading from your terminal? Run the single-source local server:
 
 ```bash
-# Launch GUI locally
-master-ab
+# Launch the console locally
+python3 master_ab.py
 
-# Launch GUI pre-loaded with a folder
-master-ab ~/Music/Logic/Album_Masters
+# Pre-load a folder of masters directly into the browser console
+python3 master_ab.py ~/Music/Album_Masters
 
-# Scan current directory
-master-ab .
+# Include all audio files (disable MASTER/MASTERED filename filter)
+python3 master_ab.py --all-audio ~/Music/Mixes
 ```
+
+*(macOS users can also double-click `MasterTournament.command`.)*
+
+---
+
+## Development & Tests
+
+No build step required — pure static HTML, CSS, and ES modules served directly from the repository root.
+
+```bash
+# Run JavaScript DSP & Tournament unit tests (Node 20+)
+node --test tests/*.test.mjs
+
+# Run Python companion server unit tests
+python3 -m unittest discover -s tests -p "test_*.py" -v
+```
+
+---
+
+## Brand & License
+
+- Built by **[Saint Gordon Collective](https://saintgordon.vercel.app)** — *Independent sound. Imperfect by design.*
+- Code licensed under the [MIT License](LICENSE). Bundled display fonts follow the notes in [assets/fonts/ENGRAVERS-LICENSE-NOTES.md](assets/fonts/ENGRAVERS-LICENSE-NOTES.md) and [assets/fonts/OFL.txt](assets/fonts/OFL.txt).
