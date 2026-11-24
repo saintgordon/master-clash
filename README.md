@@ -23,7 +23,7 @@ Drop a batch of master renders (or a whole folder) into your browser and judge t
 - **Mastering Monitor Matrix & Real Stereo Metering:**
   - Instant clickless `STEREO` / `MONO (M)` / `SIDE (S)` auditioning.
   - True dual-channel Left/Right peak + RMS VU meters (`ChannelSplitterNode`) with clip indicator and 48-band monochrome FFT spectrum.
-- **Blind Notes & Report Export:** Tag/write notes for Option I & Option II mid-round without knowing which file is which, and export a **Markdown** or **JSON** shootout report upon reveal.
+- **Blind Notes & Report Export:** Tag/write notes for Option I & Option II mid-round without knowing which file is which, and export a Markdown (`.md`) shootout report upon reveal.
 - **Smart Master Filtering & Recursive Folder Drop:** Filters for `MASTER` / `MASTERED` while excluding `UNMASTERED`, supports live re-filtering, recursive drag-and-drop folders, and optional local CLI `ffmpeg` companion mode.
 
 ---

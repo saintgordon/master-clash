@@ -17,7 +17,6 @@ import {
   TournamentEngine,
   QUICK_NOTE_TAGS,
   generateMarkdownReport,
-  generateJsonReport,
 } from './tournament.js';
 import { AudioEngine, decodeAudioDataSafe } from './audio-engine.js';
 
@@ -205,8 +204,6 @@ const App = {
       btnDownloadWinner: id('btn-download-winner'),
       btnRevealFinder: id('btn-reveal-finder'),
       btnExportMd: id('btn-export-md'),
-      btnExportJson: id('btn-export-json'),
-      btnCopyReport: id('btn-copy-report'),
       btnNewTournament: id('btn-new-tournament'),
       rankingsCard: id('rankings-card'),
       rankingsTableBody: id('rankings-table-body'),
@@ -556,22 +553,7 @@ const App = {
       if (!this.state.lastSummary) return;
       const md = generateMarkdownReport(this.state.lastSummary);
       downloadTextFile(md, `master-clash-report-${new Date().toISOString().slice(0, 10)}.md`, 'text/markdown');
-      this.showToast('Exported Markdown report.');
-    });
-
-    this.els.btnExportJson.addEventListener('click', () => {
-      if (!this.state.lastSummary) return;
-      const json = generateJsonReport(this.state.lastSummary);
-      downloadTextFile(json, `master-clash-report-${new Date().toISOString().slice(0, 10)}.json`, 'application/json');
-      this.showToast('Exported JSON report.');
-    });
-
-    this.els.btnCopyReport.addEventListener('click', () => {
-      if (!this.state.lastSummary) return;
-      const md = generateMarkdownReport(this.state.lastSummary);
-      copyTextSafe(md)
-        .then(() => this.showToast('Copied Markdown report to clipboard.'))
-        .catch(() => this.showToast('Clipboard unavailable — use Export Report (.md).', true));
+      this.showToast('Exported shootout report (.md).');
     });
 
     this.els.btnNewTournament.addEventListener('click', () => {
