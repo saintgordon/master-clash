@@ -2,7 +2,7 @@
 
 > **Blind Mastering Shootout & A/B Console** — 100% client-side in your browser, built in the editorial monochrome studio style of [Saint Gordon Collective](https://saintgordon.vercel.app).
 
-**Live App:** [https://firewallaby.github.io/master-clash/](https://firewallaby.github.io/master-clash/)
+**Live App:** [https://saintgordon.github.io/master-clash/](https://saintgordon.github.io/master-clash/)
 
 ---
 
